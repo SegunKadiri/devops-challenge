@@ -7,37 +7,7 @@ Everything is deployable locally — **no cloud accounts needed**.
 ---
 
 # Architecture
-+---------------------------+
-|         Browser           |
-+-------------+-------------+
-              |
-              v
-+-------------+------------+         +---------------------------+
-|      Web Deployment      |  --->   |      NetworkPolicy        |
-|  Nginx with InitContainer|         |   Allow only Web → DB     |
-|  Shows Pod IP + Serving  |         +---------------------------+
-|  Host = Host-xxxxx       |
-+-------------+------------+
-              |
-              v
-+-------------+------------+
-|  MySQL StatefulSet       |
-|  Persistent Volume (PVC) |
-|  Node Affinity for DB    |
-+-------------+------------+
-              |
-              v
-+-------------+------------+
-| DB Backup CronJob        |
-| Disaster Recovery (DR)   |
-+--------------------------+
-
-+--------------------------------------------------------------+
-|                 Go Pod Monitor Deployment                    |
-| Watches ALL K8s pod events: ADDED, UPDATED, DELETED          |
-| Prints structured logs with Pod, Namespace, Phase, IP        |
-+--------------------------------------------------------------+
-
+![Architecture Diagram](/architecture.png)
 
 # 📌 Features Implemented (Checklist)
 
