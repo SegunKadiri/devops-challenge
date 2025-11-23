@@ -1,0 +1,29 @@
+# values.yaml - concrete values used by templates
+replicaCountWeb: 3
+
+web:
+  image: nginx:1.25-alpine
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30080
+
+mysql:
+  image: mariadb:10.11
+  rootPassword: 's3cureRootPass!'
+  database: appdb
+  user: appuser
+  password: 'apppass123!'
+  replicas: 3
+  storage:
+    size: 5Gi
+    storageClassName: "" # leaving empty to use the cluster default
+
+backup:
+  enabled: true
+  schedule: "0 */6 * * *" # every 6 hours
+  backupPVCSize: 5Gi
+
+monitor:
+  image: devops-monitor:local
+  replicas: 1

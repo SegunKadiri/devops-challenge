@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: devops-demo-mysql
+  labels:
+    app: mysql-db
+spec:
+  serviceName: devops-demo-mysql
+  replicas: {{ .Values.mysql.replicas }}
+  selector:
+    matchLabels:
+      app: mysql-db
+  template:
+    metadata:
+      labels:
+        app: mysql-db
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: mariadb
+        image: {{ .Values.mysql.image }}
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "{{ .Values.mysql.rootPassword }}"
+        - name: MYSQL_DATABASE
+          value: "{{ .Values.mysql.database }}"
+        - name: MYSQL_USER
+          value: "{{ .Values.mysql.user }}"
+        - name: MYSQL_PASSWORD
+          value: "{{ .Values.mysql.password }}"
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: {{ .Values.mysql.storage.size }}
+      {{- if .Values.mysql.storage.storageClassName }}
+      storageClassName: "{{ .Values.mysql.storage.storageClassName }}"
+      {{- end }}

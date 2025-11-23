@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-monitor
+  labels:
+    app: devops-monitor
+spec:
+  replicas: {{ .Values.monitor.replicas }}
+  selector:
+    matchLabels:
+      app: devops-monitor
+  template:
+    metadata:
+      labels:
+        app: devops-monitor
+    spec:
+      serviceAccountName: pod-monitor
+      containers:
+      - name: monitor
+        image: {{ .Values.monitor.image }}
+        args: ["-kubeconfig",""]

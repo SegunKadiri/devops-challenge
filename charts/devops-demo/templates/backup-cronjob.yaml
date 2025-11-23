@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: devops-demo-mysql-backup
+spec:
+  schedule: "{{ .Values.backup.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: bitnami/mariadb:10.11
+            env:
+            - name: MYSQL_PWD
+              value: "{{ .Values.mysql.rootPassword }}"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              ts=$(date +%Y%m%d-%H%M%S)
+              mkdir -p /backup
+              mysqldump -h devops-demo-mysql-0.devops-demo-mysql.default.svc.cluster.local -u root --all-databases > /backup/mariadb-$ts.sql
+              tar -czf /backup/mariadb-$ts.tar.gz /backup/mariadb-$ts.sql
+              echo "backup written /backup/mariadb-$ts.tar.gz"
+            volumeMounts:
+            - mountPath: /backup
+              name: backup-pvc
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-pvc
+            persistentVolumeClaim:
+              claimName: devops-demo-backup-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: devops-demo-backup-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.backup.backupPVCSize }}

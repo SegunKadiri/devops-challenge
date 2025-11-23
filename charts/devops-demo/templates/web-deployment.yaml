@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-demo-web
+  labels:
+    app: web-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-server
+  template:
+    metadata:
+      labels:
+        app: web-server
+    spec:
+      volumes:
+        - name: html-output
+          emptyDir: {}
+        - name: html-template
+          configMap:
+            name: devops-demo-web-template
+      initContainers:
+        - name: init-serving-host
+          image: alpine:3.20
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              apk add --no-cache gettext
+              tail5=$(echo -n "$POD_NAME" | rev | cut -c -5 | rev)
+              echo "Host-$tail5" > /tmp/serving-host
+              export POD_IP=${POD_IP}
+              export SERVING_HOST=$(cat /tmp/serving-host)
+              envsubst < /app/templates/index.html > /usr/share/nginx/html/index.html
+              echo "Generated HTML:"
+              cat /usr/share/nginx/html/index.html
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          volumeMounts:
+            - name: html-template
+              mountPath: /app/templates
+            - name: html-output
+              mountPath: /usr/share/nginx/html
+      containers:
+        - name: nginx
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html-output
+              mountPath: /usr/share/nginx/html
